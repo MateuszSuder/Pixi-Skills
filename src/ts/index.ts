@@ -1,92 +1,94 @@
-import { Application, Sprite, Ticker, Container } from "pixi.js-legacy";
-import { randomInt } from "./functions";
+import { Application, Sprite, Container, Loader, Ticker, filters } from "pixi.js-legacy";
+import { Skill } from "./Skill";
 
-const app = new Application({ transparent: true });
+export const app = new Application({ transparent: true });
 
 document.body.appendChild(app.view);
 
 app.loader.baseUrl = "src/img/";
 
-app.loader.add("Angular", "Angular.png")
-.add("C++", "cpp.png")
-.add("CSS3", "CSS3.png")
-.add("HTML5", "HTML5.png")
-.add("Java", "Java.png")
-.add("jQuery", "jQuery.png")
-.add("JavaScript", "js.png")
-.add("MySQL", "mySQL.png")
-.add("Node.js", "node.png")
-.add("npm", "npm.png")
-.add("PHP", "PHP.png")
-.add("PixiJS", "pixi.png")
-.add("Sass", "SASS.png")
-.add("TypeScript", "ts.png")
-.add("webpack", "webpack.png");
+app.loader
+  .add("Angular", "Angular.png")
+  .add("C++", "cpp.png")
+  .add("CSS3", "CSS3.png")
+  .add("HTML5", "HTML5.png")
+  .add("Java", "Java.png")
+  .add("jQuery", "jQuery.png")
+  .add("JavaScript", "js.png")
+  .add("MySQL", "mySQL.png")
+  .add("Node.js", "node.png")
+  .add("npm", "npm.png")
+  .add("PHP", "PHP.png")
+  .add("PixiJS", "pixi.png")
+  .add("Sass", "SASS.png")
+  .add("TypeScript", "ts.png")
+  .add("webpack", "webpack.png");
+
+export let bigger = new Loader();
+bigger.baseUrl = "src/img/400px";
+bigger.add("Angular400px", "Angular.png");
+
+bigger.load();
 
 app.loader.onComplete.add(doneLoading);
 app.loader.load();
 
-class Skill {
-  sprite: Sprite;
-  startingPos: number[]; // x,y
-  multiSin: number; // 15 - 50
-  multiIt: number; // 0.025 - 0.05
-  it: number = 0;
-  high: boolean;
-  floating: Ticker = new Ticker();
-  constructor(s: Sprite, h: boolean) {
-    this.high = h;
-
-    this.sprite = s;
-
-    this.multiSin = randomInt(15, 50);
-    this.multiIt = randomInt(25, 50) / 1000;
-
-    this.sprite.anchor.set(0.5, 0.5);
-    this.sprite.position.x = randomInt(
-      this.sprite.width,
-      window.innerWidth - this.sprite.width
-    );
-    this.sprite.position.y = randomInt(
-      this.sprite.height + this.multiSin,
-      window.innerHeight - this.sprite.height - this.multiSin
-    );
-    this.startingPos = [this.sprite.position.x, this.sprite.position.y];
-
-    this.floating.add((delta) => {
-      this.sprite.position.y =
-        this.startingPos[1] + Math.sin(this.it) * this.multiSin;
-      this.it += this.multiIt;
-    });
-
-    this.floating.start();
-  }
-}
-
 let skillsL: Skill[] = [];
 let skillsH: Skill[] = [];
 
+export let highContainer: Container = new Container();
+export let lowContainer: Container = new Container();
+
+export let size: number = 0;
+
+if (window.innerWidth > window.innerHeight) {
+  size = window.innerWidth / 20;
+} else {
+  size = window.innerHeight / 20;
+}
+
+export function blurScene(){
+  const blur = new filters.BlurFilter();
+  blur.blur = 0;
+  highContainer.filters = [blur];
+  lowContainer.filters = [blur];
+  let it = 0;
+  const bluring = new Ticker();
+  bluring.add((delta) => {
+    blur.blur += 0.5;
+    if(blur.blur >= 15){
+      bluring.destroy();
+    }
+  })
+  bluring.start();
+}
+
 function doneLoading() {
+    resize();
 
-  resize();
-
-  console.log(Object.keys(app.loader.resources).length)
-  let highContainer: Container = new Container();
-  let lowContainer: Container = new Container();
-
-  for (let i in app.loader.resources) {
-    let sprite: Sprite = Sprite.from(app.loader.resources[i].texture);
-    sprite.interactive = true;
-    sprite.cursor = 'pointer'; 
-    
-    if(i != 'C++' && i != 'Java' && i != 'PHP' && i != 'MySQL' && i != 'Node.js'){
-        skillsH.push(new Skill(sprite, true));
-    }else{
-        skillsL.push(new Skill(sprite, false));
+    if (window.innerWidth > window.innerHeight) {
+        highContainer.position.x = highContainer.position.y = 0;
+        lowContainer.position.x = window.innerWidth / 2;
+        lowContainer.position.y = 0;
+    } else {
+        highContainer.position.x = highContainer.position.y = 0;
+        lowContainer.position.x = 0;
+        lowContainer.position.y = window.innerHeight / 2;
     }
 
-    app.stage.addChild(sprite);
-  }
+    for (let i in app.loader.resources) {
+        let sprite: Sprite = Sprite.from(app.loader.resources[i].texture);
+        sprite.interactive = true;
+        sprite.cursor = "pointer";
+
+        if (i != "C++" && i != "Java" && i != "PHP" && i != "MySQL" && i != "Node.js") {
+            skillsH.push(new Skill(sprite, true, i));
+        } else {
+            skillsL.push(new Skill(sprite, false, i));
+        }
+
+        app.stage.addChild(highContainer, lowContainer);
+    }
 }
 
 window.addEventListener("resize", resize);
