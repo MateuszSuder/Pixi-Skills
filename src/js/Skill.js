@@ -18,7 +18,12 @@ var Skill = /** @class */ (function () {
         this.setPosition();
         this.floating.add(function (delta) {
             _this.sprite.position.y = _this.startingPos[1] + Math.sin(_this.it) * _this.multiSin;
-            _this.it += _this.multiIt;
+            if (_this.it >= 2 * Math.PI) {
+                _this.it = 0;
+            }
+            else {
+                _this.it += _this.multiIt;
+            }
         });
         this.floating.start();
     }

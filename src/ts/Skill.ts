@@ -26,7 +26,11 @@ export class Skill {
 
         this.floating.add((delta) => {
             this.sprite.position.y = this.startingPos[1] + Math.sin(this.it) * this.multiSin;
-            this.it += this.multiIt;
+            if(this.it >= 2 * Math.PI){
+                this.it = 0;
+            }else{
+                this.it += this.multiIt;
+            }
         });
 
         this.floating.start();
